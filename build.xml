@@ -15,6 +15,7 @@
            target="21"
            includeantruntime="false">
       <classpath>
+         <pathelement location="/path/to/tomcat10/lib/jakarta.servlet-api-5.0.0.jar"/>
         <!-- any needed libs -->
       </classpath>
     </javac>
