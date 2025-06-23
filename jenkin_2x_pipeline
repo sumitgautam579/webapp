@@ -1,0 +1,55 @@
+pipeline {
+  agent any
+
+  tools {
+    // Make sure you’ve configured a JDK 21 installation under "Global Tool Configuration"
+    jdk 'Java21'
+    // And an Ant installer if needed
+    ant 'Ant-1.10'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Build & Compile') {
+      steps {
+        sh 'ant compile'
+      }
+    }
+
+    stage('Unit Tests') {
+      steps {
+        sh 'ant test'
+        junit '**/build/test-results/*.xml'
+      }
+    }
+
+    stage('Package WAR') {
+      steps {
+        sh 'ant war'   // define a war target in build.xml that zips WebContent + classes
+        archiveArtifacts artifacts: '**/build/*.war', fingerprint: true
+      }
+    }
+
+    stage('Deploy to Tomcat 10') {
+      steps {
+        // You’ll need the Deploy to container plugin configured with your Tomcat 10 credentials
+        deploy adapters: [tomcat9(credentialsId: 'tomcat-10-creds',
+                                path: '',
+                                url: 'http://tomcat-host:8080')],
+               contextPath: 'jenkins-sample', 
+               war: '**/build/SampleWebApp.war'
+      }
+    }
+  }
+
+  post {
+    always {
+      cleanWs()
+    }
+  }
+}
